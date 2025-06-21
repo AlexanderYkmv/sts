@@ -24,14 +24,7 @@ public class SecurityConfig {
         http
          .csrf(csrf -> csrf.disable())
          .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/sts/auth/**").permitAll()
-            .requestMatchers("/sts/student/setup").permitAll()
-            .requestMatchers(
-                "/**/*.html",
-                "/**/*.css",
-                "/**/*.js",
-                "/favicon.ico"
-            ).permitAll()
+            .requestMatchers("/**").permitAll()
             .anyRequest().authenticated()
          )
          .sessionManagement(session -> session
