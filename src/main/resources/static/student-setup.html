@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Setup</title>
+</head>
+<body>
+  <h2>Student Setup</h2>
+  <form id="setupForm">
+    Faculty Number: <input type="text" id="facultyNumber" required><br><br>
+    Major: <input type="text" id="major" required><br><br>
+    Tutor ID (optional): <input type="number" id="tutorId"><br><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="message" style="color:red;"></div>
+
+  <script>
+    // Check if user is logged in and role is Student
+    const userId = sessionStorage.getItem('userId');
+    const role = sessionStorage.getItem('role');
+
+    if (!userId || role !== 'Student') {
+      window.location.href = '/login.html'; // Redirect to login if not logged in
+    }
+
+    const form = document.getElementById('setupForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      messageDiv.textContent = '';
+
+      const facultyNumber = document.getElementById('facultyNumber').value;
+      const major = document.getElementById('major').value;
+      const tutorIdInput = document.getElementById('tutorId').value;
+
+      const body = {
+        userId: parseInt(userId),
+        facultyNumber,
+        major,
+        tutorId: tutorIdInput ? parseInt(tutorIdInput) : null
+      };
+
+      try {
+        const res = await fetch('/sts/student/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+          credentials: 'include'
+        });
+
+        if (res.ok) {
+          messageDiv.style.color = 'green';
+          messageDiv.textContent = 'Student profile created successfully!';
+        } else {
+          const errorText = await res.text();
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = `Error: ${errorText}`;
+        }
+      } catch (err) {
+        messageDiv.textContent = 'Error connecting to server.';
+      }
+    });
+  </script>
+</body>
+</html>
