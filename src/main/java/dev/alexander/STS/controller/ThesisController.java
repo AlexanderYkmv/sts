@@ -50,6 +50,7 @@ public class ThesisController {
         Thesis thesis = new Thesis();
         thesis.setStudent(studentOpt.get());
         thesis.setTitle(title);
+        thesis.setFileName(file.getOriginalFilename());
         thesis.setMajor(major);
         thesis.setFileData(file.getBytes());
         thesis.setStatus(Thesis.ThesisStatus.PENDING);

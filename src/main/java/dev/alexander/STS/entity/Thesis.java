@@ -34,7 +34,7 @@ public class Thesis {
     private String fileName;
 
     @Lob
-    @Column(name = "file_data")
+    @Column(name = "file_data", columnDefinition = "LONGBLOB")
     private byte[] fileData;
 
     @OneToOne

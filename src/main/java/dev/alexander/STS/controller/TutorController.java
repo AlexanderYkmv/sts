@@ -51,6 +51,8 @@ public class TutorController {
         Tutor tutor = new Tutor();
         tutor.setUser(user);
         tutor.setTitle(request.getTitle());
+        tutor.setDepartment(request.getDepartment());
+        tutor.setOfficeNumber(request.getOfficeNumber());
         Tutor savedTutor = tutorService.saveTutor(tutor);
         
         for (ResearchTopicRequest dto : request.getTopics()) {

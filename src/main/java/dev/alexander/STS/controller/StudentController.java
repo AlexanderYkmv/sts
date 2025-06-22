@@ -1,5 +1,6 @@
 package dev.alexander.STS.controller;
 
+import java.security.Principal;
 import java.util.Optional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,14 +24,15 @@ public class StudentController {
     private final StudentRepository studentRepository;
 
     @PostMapping("/setup")
-    public ResponseEntity<?> setupStudent(@RequestBody StudentRegisterRequest request) {
-        Optional<User> userOpt = userRepository.findById(request.getUserId());
+    public ResponseEntity<?> setupStudent(@RequestBody StudentRegisterRequest request, Principal principal) {
+        String email = principal.getName();
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty() || userOpt.get().getRole() != User.Role.Student) {
             return ResponseEntity.badRequest().body("Invalid student ID.");
         }
         
         Student student = new Student();
-        student.setUser(userOpt.get());
+        student.setUser(userOpt.get()); 
         student.setFacultyNumber(request.getFacultyNumber());
         student.setMajor(request.getMajor());
 

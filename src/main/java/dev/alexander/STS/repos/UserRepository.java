@@ -8,6 +8,5 @@ import dev.alexander.STS.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User,Integer> {
     boolean existsByEmail(String email);
-    Optional<User> findByEmail(String email);
-    
-}
+    Optional<User> findByEmail(String email);  
+} 

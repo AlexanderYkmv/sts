@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import dev.alexander.STS.entity.User;
+import dev.alexander.STS.repos.StudentRepository;
 import dev.alexander.STS.repos.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -36,6 +37,9 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private StudentRepository studentRepository;
     
     public AuthController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -51,7 +55,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest servletRequest) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest().body("Email already exists.");
             }
@@ -64,6 +68,14 @@ public class AuthController {
         user.setRole(request.getRole());
 
         userRepository.save(user);
+
+        UsernamePasswordAuthenticationToken authToken =
+            new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword());
+        Authentication authentication = authenticationManager.authenticate(authToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        HttpSession session = servletRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                            SecurityContextHolder.getContext());
 
         Map<String, Object> response = new HashMap<>();
         response.put("userId", user.getId());
@@ -103,6 +115,20 @@ public class AuthController {
             Map<String, Object> response = new HashMap<>();
             response.put("userId", user.getId());
             response.put("role", user.getRole());
+            
+            if (user.getRole() == User.Role.Student) {
+
+                boolean studentExists = studentRepository.existsByUser(user);
+                if (studentExists) {
+                    response.put("redirect", "sts/student/dashboard");
+                } else {
+                    response.put("redirect", "sts/student/setup");
+                }
+            } else if (user.getRole() == User.Role.Tutor) {
+                response.put("redirect", "sts/tutor/setup");
+            } else if (user.getRole() == User.Role.Vice_Dean) {
+                response.put("redirect", "/vice-dean/dashboard");
+            }
 
             return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {

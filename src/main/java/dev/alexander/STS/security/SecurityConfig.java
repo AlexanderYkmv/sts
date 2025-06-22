@@ -22,16 +22,36 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         http
-         .csrf(csrf -> csrf.disable())
-         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/**").permitAll()
-            .anyRequest().authenticated()
-         )
-         .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-        )
-        .authenticationProvider(authenticationProvider)
-        .formLogin(login -> login.disable());
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/login", 
+                    "/register", 
+                    "/webjars/**", 
+                    "/css/**", 
+                    "/js/**", 
+                    "/sts/auth/register",
+                    "/sts/auth/login",
+                    "/sts/student/dashboard",
+                    "/sts/student/setup",
+                    "/sts/thesis/upload",
+                    "/sts/auth/test"
+                    
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            )
+            .authenticationProvider(authenticationProvider);
+        
 
         return http.build();
     }
