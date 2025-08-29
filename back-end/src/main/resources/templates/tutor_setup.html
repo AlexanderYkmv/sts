@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Tutor Setup - Thesis Portal</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css" />
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4 text-center">Tutor Setup</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form id="tutorSetupForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" id="title" name="title" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="department" class="form-label">Department</label>
+                            <input type="text" id="department" name="department" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="officeNumber" class="form-label">Office Number</label>
+                            <input type="number" id="officeNumber" name="officeNumber" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="accessCode" class="form-label">Access Code</label>
+                            <input type="text" id="accessCode" name="accessCode" class="form-control" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="topics" class="form-label">Research Topics (JSON Array)</label>
+                            <textarea id="topics" name="topics" class="form-control" rows="4"
+                                      placeholder='Example: [{"name":"AI","topic":"Machine Learning"},{"name":"Networks","topic":"5G"}]'></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">Complete Setup</button>
+                        </div>
+                    </form>
+                    <div id="setupMessage" class="text-center mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById("tutorSetupForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    
+    let topics = [];
+    try {
+        if (this.topics.value.trim().length > 0) {
+            topics = JSON.parse(this.topics.value.trim());
+        }
+    } catch (err) {
+        document.getElementById("setupMessage").textContent = "Invalid JSON format for research topics.";
+        return;
+    }
+
+    const formData = {
+        title: this.title.value,
+        department: this.department.value,
+        officeNumber: parseInt(this.officeNumber.value, 10),
+        accessCode: this.accessCode.value,
+        topics: topics
+    };
+
+    fetch("/sts/tutor/setup", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => { throw new Error(text); });
+        }
+        return response.text();
+    })
+    .then(msg => {
+        document.getElementById("setupMessage").textContent = msg;
+        if (msg === "Tutor profile created successfully.") {
+            window.location.href = "/sts/tutor/dashboard"; 
+        }
+    })
+    .catch(error => {
+        document.getElementById("setupMessage").textContent = "Error: " + error.message;
+    });
+});
+</script>
+
+<script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

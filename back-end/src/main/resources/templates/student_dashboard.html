@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Student Dashboard - Thesis Portal</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        .plus-icon {
+            font-size: 3rem;
+            color: #0d6efd;
+            cursor: pointer;
+        }
+
+        .upload-card {
+            border: 2px dashed #0d6efd;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            background-color: white;
+        }
+
+        .upload-card:hover {
+            background-color: #f0f8ff;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="mb-4">Welcome to your Student Dashboard</h1>
+
+    <!-- Thesis Submission Section -->
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            <div th:if="${thesis == null}" class="upload-card" onclick="document.getElementById('thesisUploadForm').classList.remove('d-none')">
+                <div class="plus-icon">+</div>
+                <p class="mt-3">Click to submit your thesis</p>
+            </div>
+
+            <!-- Display submitted thesis info -->
+            <div th:if="${thesis != null}" class="card">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${thesis.title}">Thesis Title</h5>
+                    <p class="card-text" th:text="'Major: ' + ${thesis.major}"></p>
+                    <a th:href="@{/sts/thesis/{id}/file(id=${thesis.id})}" class="btn btn-primary">View Submitted File</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form (Hidden Initially) -->
+    <div id="thesisUploadForm" class="row d-none mt-4">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Upload Thesis
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/sts/thesis/upload}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="studentId" th:value="${student.id}" />
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Thesis Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="major" class="form-label">Major</label>
+                            <input type="text" class="form-control" id="major" name="major" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Upload PDF</label>
+                            <input type="file" class="form-control" id="file" name="file" accept="application/pdf" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Submit Thesis</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="/webjars/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
