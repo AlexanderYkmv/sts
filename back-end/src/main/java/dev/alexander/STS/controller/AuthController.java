@@ -64,11 +64,10 @@ public class AuthController {
                 tutorRepository.save(t);
             }
             case Vice_Dean -> {
-                // no extra entity yet
+                
             }
         }
-
-        // Auto-login after registration
+        
         try {
             Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword())

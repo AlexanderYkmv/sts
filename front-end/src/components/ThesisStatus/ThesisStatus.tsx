@@ -2,15 +2,7 @@ import { useEffect, useState } from "react";
 
 type Props = {
   studentId: number;
-};
-
-type Thesis = {
-  id: number;
-  title: string;
-  major: string;
-  status: string;
-  fileName: string;
-  approvedBy?: { id: number; firstName: string; lastName: string };
+  initialThesis?: any | null;
 };
 
 type Feedback = {
@@ -20,47 +12,69 @@ type Feedback = {
   author: { firstName: string; lastName: string };
 };
 
-export default function ThesisStatus({ studentId }: Props) {
-  const [thesis, setThesis] = useState<Thesis | null>(null);
+export default function ThesisStatus({ studentId, initialThesis }: Props) {
+  const [thesis, setThesis] = useState<any | null>(initialThesis || null);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialThesis);
 
+  // ✅ Keep thesis in sync when parent passes a new one
   useEffect(() => {
-    const fetchThesis = async () => {
-      try {
-        const res = await fetch(`http://localhost:8080/sts/thesis/student/${studentId}`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setThesis(data);
+    if (initialThesis) {
+      setThesis(initialThesis);
+      setLoading(false);
+    }
+  }, [initialThesis]);
 
-          // Fetch feedback list for this thesis
+  // ✅ Fetch thesis + feedback if no initialThesis is given
+  useEffect(() => {
+    if (initialThesis) return; // skip fetching if already provided
+
+    const fetchThesisAndFeedback = async () => {
+      setLoading(true);
+      try {
+        const thesisRes = await fetch(
+          `http://localhost:8080/sts/thesis/student/${studentId}`,
+          { credentials: "include", cache: "no-store" }
+        );
+
+        if (!thesisRes.ok) {
+          setThesis(null);
+          setFeedback([]);
+          return;
+        }
+
+        const thesisData = await thesisRes.json();
+        setThesis(thesisData);
+
+        if (thesisData?.id) {
           const feedbackRes = await fetch(
-            `http://localhost:8080/sts/feedback/thesis/${data.id}`,
-            { credentials: "include" }
+            `http://localhost:8080/sts/feedback/thesis/${thesisData.id}`,
+            { credentials: "include", cache: "no-store" }
           );
-          if (feedbackRes.ok) {
-            const feedbackData = await feedbackRes.json();
-            setFeedback(feedbackData);
-          }
+          const feedbackData: Feedback[] = feedbackRes.ok
+            ? await feedbackRes.json()
+            : [];
+          setFeedback(feedbackData);
+        } else {
+          setFeedback([]);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching thesis:", err);
+        setThesis(null);
+        setFeedback([]);
       } finally {
         setLoading(false);
       }
     };
-    fetchThesis();
-  }, [studentId]);
+
+    fetchThesisAndFeedback();
+  }, [studentId, initialThesis]);
 
   if (loading) return <p>Loading...</p>;
-
-  if (!thesis)
-    return <p className="text-gray-600">No thesis uploaded yet.</p>;
+  if (!thesis) return <p className="text-gray-600">No thesis uploaded yet.</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 border rounded-lg p-4 bg-white shadow-md">
       <div>
         <p><strong>Title:</strong> {thesis.title}</p>
         <p><strong>Major:</strong> {thesis.major}</p>
@@ -94,7 +108,6 @@ export default function ThesisStatus({ studentId }: Props) {
         </a>
       </div>
 
-      {/* Feedback Section */}
       <div>
         <h3 className="text-lg font-semibold text-gray-800">Feedback</h3>
         {feedback.length === 0 ? (

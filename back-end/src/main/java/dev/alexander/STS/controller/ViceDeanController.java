@@ -46,24 +46,32 @@ public class ViceDeanController {
 
     // thesis approval
     @PostMapping("/thesis/decision")
-    public ResponseEntity<?> decideOnThesis(@RequestBody ThesisReviewRequest request) {
-        Optional<Thesis> thesisOpt = thesisService.getThesisById(request.getThesisId());
-        Optional<User> viceDeanOpt = userService.getUserById(request.getViceDeanId());
+public ResponseEntity<?> decideOnThesis(@RequestBody ThesisReviewRequest request) {
+    Optional<Thesis> thesisOpt = thesisService.getThesisById(request.getThesisId());
+    Optional<User> viceDeanOpt = userService.getUserById(request.getViceDeanId());
 
-        if (thesisOpt.isEmpty() || viceDeanOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Invalid thesis or user ID");
-        }
-
-        User viceDean = viceDeanOpt.get();
-        if (viceDean.getRole() != User.Role.Vice_Dean) {
-            return ResponseEntity.badRequest().body("User is not a Vice Dean");
-        }
-
-        Thesis thesis = thesisOpt.get();
-        thesis.setStatus(request.getStatus());
-        thesis.setApprovedBy(viceDean);
-        thesisService.saveThesis(thesis);
-
-        return ResponseEntity.ok("Thesis " + request.getStatus());
+    if (thesisOpt.isEmpty() || viceDeanOpt.isEmpty()) {
+        return ResponseEntity.badRequest().body("Invalid thesis or user ID");
     }
+
+    User viceDean = viceDeanOpt.get();
+    if (viceDean.getRole() != User.Role.Vice_Dean) {
+        return ResponseEntity.badRequest().body("User is not a Vice Dean");
+    }
+
+    Thesis thesis = thesisOpt.get();
+
+    // Convert string to enum safely
+    try {
+        Thesis.ThesisStatus status = Thesis.ThesisStatus.valueOf(request.getStatus().toUpperCase());
+        thesis.setStatus(status);
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body("Invalid thesis status");
+    }
+
+    thesis.setApprovedBy(viceDean);
+    thesisService.saveThesis(thesis);
+
+    return ResponseEntity.ok("Thesis reviewed with status: " + request.getStatus());
+}
 }

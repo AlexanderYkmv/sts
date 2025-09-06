@@ -7,6 +7,6 @@ import lombok.Data;
 public class ThesisReviewRequest {
     private int thesisId;
     private int viceDeanId;
-    private Thesis.ThesisStatus status;
+    private String status;
     private String feedback;
 }

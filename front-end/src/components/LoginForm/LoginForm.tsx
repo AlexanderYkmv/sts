@@ -22,7 +22,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(values),
-            credentials: "include", // keep the session cookie
+            credentials: "include",
           });
 
           if (response.ok) {
@@ -32,12 +32,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               id: data.userId,
               email: data.email,
               role: data.role,
+              studentId: data.studentId,
             };
 
-            // ✅ no more extra fetch, we rely only on backend response
+            // Store user in localStorage
             localStorage.setItem("user", JSON.stringify(user));
 
-            // Pass user to parent
+            // Pass user to parent (AuthPage) for redirection
             onSuccess(user);
           } else {
             const msg = await response.text();

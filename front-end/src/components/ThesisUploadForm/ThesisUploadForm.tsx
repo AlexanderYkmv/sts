@@ -2,9 +2,10 @@ import { useState } from "react";
 
 type Props = {
   studentId: number;
+  onUploadSuccess?: (thesis: any) => void;
 };
 
-export default function ThesisUploadForm({ studentId }: Props) {
+export default function ThesisUploadForm({ studentId, onUploadSuccess }: Props) {
   const [title, setTitle] = useState("");
   const [major, setMajor] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -12,10 +13,7 @@ export default function ThesisUploadForm({ studentId }: Props) {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
-      alert("Please select a file.");
-      return;
-    }
+    if (!file) return alert("Please select a file.");
 
     const formData = new FormData();
     formData.append("studentId", studentId.toString());
@@ -31,15 +29,24 @@ export default function ThesisUploadForm({ studentId }: Props) {
         credentials: "include",
       });
 
-      if (res.ok) {
-        alert("Thesis uploaded successfully!");
-        setTitle("");
-        setMajor("");
-        setFile(null);
-      } else {
+      if (!res.ok) {
         const msg = await res.text();
-        alert(msg || "Failed to upload thesis");
+        return alert(msg || "Upload failed");
       }
+
+      // Fetch the newly uploaded thesis
+      const thesisRes = await fetch(
+        `http://localhost:8080/sts/thesis/student/${studentId}`,
+        { credentials: "include", cache: "no-store" }
+      );
+
+      const newThesis = thesisRes.ok ? await thesisRes.json() : null;
+
+      alert("Thesis uploaded successfully!");
+      setTitle("");
+      setMajor("");
+      setFile(null);
+      onUploadSuccess?.(newThesis);
     } catch (err) {
       console.error(err);
       alert("Network error");
@@ -58,7 +65,6 @@ export default function ThesisUploadForm({ studentId }: Props) {
         className="border p-2 rounded-lg"
         required
       />
-
       <input
         type="text"
         placeholder="Major"
@@ -67,7 +73,6 @@ export default function ThesisUploadForm({ studentId }: Props) {
         className="border p-2 rounded-lg"
         required
       />
-
       <input
         type="file"
         accept="application/pdf"
@@ -75,7 +80,6 @@ export default function ThesisUploadForm({ studentId }: Props) {
         className="border p-2 rounded-lg"
         required
       />
-
       <button
         type="submit"
         disabled={loading}

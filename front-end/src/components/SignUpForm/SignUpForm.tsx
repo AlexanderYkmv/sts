@@ -5,7 +5,7 @@ interface SignUpFormProps {
   onSuccess: () => void;
 }
 
-// Updated Yup schema to include firstName and lastName
+// Validation schema
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string().required("Required"),
   lastName: Yup.string().required("Required"),

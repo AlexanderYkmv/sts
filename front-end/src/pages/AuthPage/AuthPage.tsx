@@ -9,20 +9,14 @@ export default function AuthPage() {
 
   const handleLoginSuccess = (user: User) => {
     // Redirect based on role
-    if (user.role === "Student") {
-      window.location.href = "/student/dashboard";
-    } else if (user.role === "Tutor") {
-      window.location.href = "/tutor/dashboard";
-    } else if (user.role === "Vice_Dean") {
-      window.location.href = "/vicedean/dashboard";
-    } else {
-      window.location.href = "/";
-    }
+    if (user.role === "Student") window.location.href = "/student/dashboard";
+    else if (user.role === "Tutor") window.location.href = "/tutor/dashboard";
+    else if (user.role === "Vice_Dean") window.location.href = "/vicedean/dashboard";
+    else window.location.href = "/";
   };
 
   return (
     <div className="flex min-h-screen bg-[#f3ede6]">
-      {/* LEFT SIDE - Logo + Welcome */}
       <div className="flex w-1/2 flex-col justify-center items-center p-8 space-y-6 text-gray-800">
         <motion.div
           initial={{ opacity: 0, x: -40 }}
@@ -42,7 +36,6 @@ export default function AuthPage() {
         </motion.div>
       </div>
 
-      {/* RIGHT SIDE - Auth Form */}
       <div className="flex w-1/2 justify-center items-center p-8">
         <motion.div
           initial={{ opacity: 0, x: 40 }}
