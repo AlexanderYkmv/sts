@@ -2,15 +2,28 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import LoginForm from "../../components/LoginForm/LoginForm";
 import SignUpForm from "../../components/SignUpForm/SignUpForm";
+import type { User } from "../../components/types";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+
+  const handleLoginSuccess = (user: User) => {
+    // Redirect based on role
+    if (user.role === "Student") {
+      window.location.href = "/student/dashboard";
+    } else if (user.role === "Tutor") {
+      window.location.href = "/tutor/dashboard";
+    } else if (user.role === "Vice_Dean") {
+      window.location.href = "/vicedean/dashboard";
+    } else {
+      window.location.href = "/";
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[#f3ede6]">
       {/* LEFT SIDE - Logo + Welcome */}
       <div className="flex w-1/2 flex-col justify-center items-center p-8 space-y-6 text-gray-800">
-        {/* Logo + Welcome */}
         <motion.div
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -22,9 +35,7 @@ export default function AuthPage() {
             alt="Technical University of Sofia Logo"
             className="w-32 h-32 mx-auto mb-2"
           />
-          <h1 className="text-4xl font-bold text-gray-800">
-            Welcome to STS!
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-800">Welcome to STS!</h1>
           <p className="text-gray-600 text-lg">
             Your university thesis management system
           </p>
@@ -44,16 +55,14 @@ export default function AuthPage() {
           </h2>
 
           {isLogin ? (
-            <LoginForm
-              onSuccess={() => (window.location.href = "/student/dashboard")}
-            />
+            <LoginForm onSuccess={handleLoginSuccess} />
           ) : (
             <SignUpForm onSuccess={() => setIsLogin(true)} />
           )}
 
           <div className="mt-6 text-center text-gray-600">
             {isLogin ? (
-              <p className="text-gray-600">
+              <p>
                 Don’t have an account?{" "}
                 <button
                   onClick={() => setIsLogin(false)}
@@ -63,7 +72,7 @@ export default function AuthPage() {
                 </button>
               </p>
             ) : (
-              <p className="text-gray-600">
+              <p>
                 Already registered?{" "}
                 <button
                   onClick={() => setIsLogin(true)}

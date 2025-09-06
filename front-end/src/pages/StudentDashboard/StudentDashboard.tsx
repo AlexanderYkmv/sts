@@ -1,15 +1,51 @@
+import { useEffect, useState } from "react";
+import StudentSetupForm from "../../components/StudentSetupForm/StudentSetupForm";
+
+interface StudentProfile {
+  studentId: number;
+  major: string | null;
+  facultyNumber: string | null;
+  profileComplete: boolean;
+}
+
 export default function StudentDashboard() {
+  const [profile, setProfile] = useState<StudentProfile | null | "loading">("loading");
+
+  const fetchProfile = async () => {
+    setProfile("loading");
+    try {
+      const res = await fetch("http://localhost:8080/sts/student/me", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setProfile(data);
+      } else {
+        setProfile(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setProfile(null);
+    }
+  };
+
+  useEffect(() => { fetchProfile(); }, []);
+
+  if (profile === "loading") return <div>Loading profile...</div>;
+  if (!profile) return <div>Error loading profile.</div>;
+
+  if (!profile.profileComplete) {
+    return <StudentSetupForm onComplete={fetchProfile} />;
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold text-blue-700 text-center">🎓 Student Dashboard</h1>
-      
-      <div className="bg-white rounded-xl shadow p-6">
-        <p className="text-gray-700">Welcome, Student! Here you can:</p>
-        <ul className="list-disc list-inside text-gray-600 mt-2">
-          <li>Submit your thesis</li>
-          <li>Track submission status</li>
-          <li>View tutor feedback</li>
-        </ul>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Student Dashboard</h1>
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <p><strong>Major:</strong> {profile.major}</p>
+        <p><strong>Faculty Number:</strong> {profile.facultyNumber}</p>
+      </div>
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">Your Thesis</h2>
+        <p>No thesis assigned yet.</p>
       </div>
     </div>
   );

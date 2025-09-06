@@ -1,5 +1,7 @@
 package dev.alexander.STS.security;
 
+import dev.alexander.STS.repos.UserRepository;
+import dev.alexander.STS.service.UserDetailsServiceImpl;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,38 +23,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> {})
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/sts/auth/**", "/login", "/register", "/webjars/**", "/css/**", "/js/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/sts/auth/logout")
-                .logoutSuccessUrl("/login?logout")
-                .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-            )
-            .authenticationProvider(authenticationProvider);
-
-        return http.build();
+    public UserDetailsService userDetailsService(UserRepository userRepository) {
+        return new UserDetailsServiceImpl(userRepository);
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
@@ -62,11 +41,32 @@ public class SecurityConfig {
     }
 
     @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authProvider) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/sts/auth/**", "/login", "/register", "/webjars/**", "/css/**", "/js/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authProvider)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+            .logout(logout -> logout.invalidateHttpSession(true).deleteCookies("JSESSIONID"));
+
+        return http.build();
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("Content-Type","Authorization"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

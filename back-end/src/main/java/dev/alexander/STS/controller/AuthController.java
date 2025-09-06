@@ -1,161 +1,134 @@
 package dev.alexander.STS.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
+import dev.alexander.STS.entity.Student;
+import dev.alexander.STS.entity.Tutor;
+import dev.alexander.STS.entity.User;
+import dev.alexander.STS.repos.StudentRepository;
+import dev.alexander.STS.repos.TutorRepository;
+import dev.alexander.STS.repos.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import dev.alexander.STS.entity.User;
-import dev.alexander.STS.repos.StudentRepository;
-import dev.alexander.STS.repos.UserRepository;
-import dev.alexander.STS.service.TutorService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import dev.alexander.STS.entity.Student;
-import dev.alexander.STS.entity.Tutor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/sts/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired 
-    private TutorService tutorService;
-
-    @Autowired
-    private StudentRepository studentRepository;
-    
-    public AuthController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<?> testSession(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
-        }
-
-        return ResponseEntity.ok("Logged in as: " + authentication.getName());
-    }
+    private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
+    private final TutorRepository tutorRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request, HttpServletRequest servletRequest) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request,
+                                      HttpServletRequest servletRequest) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest().body("Email already exists.");
         }
 
-        // Create user
         User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole()); // enum: Student, Tutor, Vice_Dean
-        userRepository.save(user);
+        user.setRole(request.getRole());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user = userRepository.save(user);
 
-        // Auto-create role-specific profile
         switch (user.getRole()) {
             case Student -> {
-                var student = new Student();
-                student.setUser(user);
-                student.setFacultyNumber(null); // optional, fill later
-                student.setMajor(null);
-                studentRepository.save(student);
+                Student s = new Student();
+                s.setUser(user);
+                studentRepository.save(s);
             }
             case Tutor -> {
-                var tutor = new Tutor();
-                tutor.setUser(user);
-                tutor.setTitle(null); // optional
-                tutorService.saveTutor(tutor);
+                Tutor t = new Tutor();
+                t.setUser(user);
+                tutorRepository.save(t);
             }
             case Vice_Dean -> {
-                // no extra table needed right now
+                // no extra entity yet
             }
         }
 
-        // Auto-login
-        var authToken = new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword());
-        Authentication authentication = authenticationManager.authenticate(authToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        HttpSession session = servletRequest.getSession(true);
-        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                SecurityContextHolder.getContext());
-        session.setAttribute("userId", user.getId());
+        // Auto-login after registration
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword())
+            );
 
-        // Build response with consistent absolute redirects
-        Map<String, Object> response = new HashMap<>();
-        response.put("userId", user.getId());
-        response.put("role", user.getRole());
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
 
-        switch (user.getRole()) {
-            case Student -> response.put("redirect", "/sts/student/dashboard");
-            case Tutor -> response.put("redirect", "/sts/tutor/dashboard");
-            case Vice_Dean -> response.put("redirect", "/vice-dean/dashboard");
+            HttpSession session = servletRequest.getSession(true);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", user.getId());
+            response.put("email", user.getEmail());
+            response.put("role", user.getRole());
+            return ResponseEntity.ok(response);
+
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Registration succeeded, login failed.");
         }
-
-        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body, HttpServletRequest request) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body,
+                                   HttpServletRequest request) {
         String email = body.get("email");
         String password = body.get("password");
 
         try {
-            var authRequest = new UsernamePasswordAuthenticationToken(email, password);
-            Authentication authentication = authenticationManager.authenticate(authRequest);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(email, password)
+            );
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
 
             HttpSession session = request.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    SecurityContextHolder.getContext());
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
-            User user = (User) authentication.getPrincipal();
-            session.setAttribute("userId", user.getId());
+            User loggedInUser = (User) auth.getPrincipal();
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("userId", user.getId());
-            response.put("role", user.getRole());
-
-            // Redirects: absolute paths
-            switch (user.getRole()) {
-                case Student -> {
-                    boolean studentExists = studentRepository.existsByUser(user);
-                    response.put("redirect", studentExists ? "/sts/student/dashboard" : "/sts/student/dashboard");
-                    // since we now auto-create, both branches go to dashboard
-                }
-                case Tutor -> {
-                    boolean tutorExists = tutorService.existsByUser(user);
-                    response.put("redirect", tutorExists ? "/sts/tutor/dashboard" : "/sts/tutor/dashboard");
-                }
-                case Vice_Dean -> response.put("redirect", "/vice-dean/dashboard");
-            }
-
-            return ResponseEntity.ok(response);
+            Map<String, Object> res = new HashMap<>();
+            res.put("userId", loggedInUser.getId());
+            res.put("email", loggedInUser.getEmail());
+            res.put("role", loggedInUser.getRole());
+            return ResponseEntity.ok(res);
 
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
+    }
+
+    @Data
+    public static class RegisterRequest {
+        private String firstName;
+        private String lastName;
+        private String email;
+        private String password;
+        private User.Role role;
     }
 }

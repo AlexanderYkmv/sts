@@ -1,7 +1,10 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
+import type { User } from "../types";
 
-type LoginFormProps = { onSuccess: () => void };
+interface LoginFormProps {
+  onSuccess: (user: User) => void;
+}
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Required"),
@@ -19,18 +22,23 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(values),
-            credentials: "include", // keep the session
+            credentials: "include", // keep the session cookie
           });
 
           if (response.ok) {
             const data = await response.json();
-            if (data.redirect) {
-              window.location.href = data.redirect.startsWith("/")
-                ? data.redirect
-                : `/${data.redirect}`;
-            } else {
-              onSuccess();
-            }
+
+            const user: User = {
+              id: data.userId,
+              email: data.email,
+              role: data.role,
+            };
+
+            // ✅ no more extra fetch, we rely only on backend response
+            localStorage.setItem("user", JSON.stringify(user));
+
+            // Pass user to parent
+            onSuccess(user);
           } else {
             const msg = await response.text();
             alert(msg || "Invalid credentials");
@@ -52,7 +60,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               placeholder="Email"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+            <ErrorMessage
+              name="email"
+              component="div"
+              className="text-red-500 text-sm mt-1"
+            />
           </div>
 
           <div>
@@ -62,7 +74,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               placeholder="Password"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+            <ErrorMessage
+              name="password"
+              component="div"
+              className="text-red-500 text-sm mt-1"
+            />
           </div>
 
           <button

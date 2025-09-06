@@ -1,14 +1,20 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 
-type SignUpFormProps = { onSuccess: () => void };
+interface SignUpFormProps {
+  onSuccess: () => void;
+}
 
+// Updated Yup schema to include firstName and lastName
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string().required("Required"),
   lastName: Yup.string().required("Required"),
   email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string().min(6, "Password too short").required("Required"),
-  role: Yup.mixed<"Student" | "Tutor" | "Vice_Dean">()
+  password: Yup.string().min(4, "Too Short!").required("Required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Passwords must match")
+    .required("Required"),
+  role: Yup.string()
     .oneOf(["Student", "Tutor", "Vice_Dean"])
     .required("Required"),
 });
@@ -21,39 +27,41 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         lastName: "",
         email: "",
         password: "",
-        role: "Student" as "Student" | "Tutor" | "Vice_Dean",
+        confirmPassword: "",
+        role: "Student",
       }}
       validationSchema={SignUpSchema}
       onSubmit={async (values, { setSubmitting }) => {
         try {
-          const res = await fetch("http://localhost:8080/sts/auth/register", {
+          const response = await fetch("http://localhost:8080/sts/auth/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(values),
+            body: JSON.stringify({
+              firstName: values.firstName,
+              lastName: values.lastName,
+              email: values.email,
+              password: values.password,
+              role: values.role,
+            }),
             credentials: "include",
           });
 
-          if (res.ok) {
-            const data = await res.json();
-            // go straight where BE says
-            if (data.redirect) {
-              window.location.href = data.redirect;
-            } else {
-              onSuccess();
-            }
+          if (response.ok) {
+            alert("Registration successful! Please log in.");
+            onSuccess();
           } else {
-            const msg = await res.text();
-            alert(msg || "Failed to register");
+            const msg = await response.text();
+            alert(msg || "Registration failed");
           }
-        } catch (e) {
-          console.error(e);
+        } catch (error) {
+          console.error(error);
           alert("Network error");
         } finally {
           setSubmitting(false);
         }
       }}
     >
-      {({ values, isSubmitting }) => (
+      {({ isSubmitting }) => (
         <Form className="flex flex-col gap-4">
           <div>
             <Field
@@ -62,7 +70,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
               placeholder="First Name"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm" />
+            <ErrorMessage name="firstName" component="div" className="text-red-500 text-sm mt-1" />
           </div>
 
           <div>
@@ -72,7 +80,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
               placeholder="Last Name"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm" />
+            <ErrorMessage name="lastName" component="div" className="text-red-500 text-sm mt-1" />
           </div>
 
           <div>
@@ -82,7 +90,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
               placeholder="Email"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="email" component="div" className="text-red-500 text-sm" />
+            <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
           </div>
 
           <div>
@@ -92,26 +100,36 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
               placeholder="Password"
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
-            <ErrorMessage name="password" component="div" className="text-red-500 text-sm" />
+            <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
           </div>
 
-          <Field
-            as="select"
-            name="role"
-            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          >
-            <option value="Student">Student</option>
-            <option value="Tutor">Tutor</option>
-            <option value="Vice_Dean">Vice Dean</option>
-          </Field>
-          <ErrorMessage name="role" component="div" className="text-red-500 text-sm" />
+          <div>
+            <Field
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            />
+            <ErrorMessage name="confirmPassword" component="div" className="text-red-500 text-sm mt-1" />
+          </div>
 
-          {/* Access code UI removed for now since BE doesn't use it yet */}
+          <div>
+            <Field
+              as="select"
+              name="role"
+              className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="Student">Student</option>
+              <option value="Tutor">Tutor</option>
+              <option value="Vice_Dean">Vice Dean</option>
+            </Field>
+            <ErrorMessage name="role" component="div" className="text-red-500 text-sm mt-1" />
+          </div>
 
           <button
             type="submit"
             disabled={isSubmitting}
-            className="bg-green-600 hover:bg-green-700 text-white rounded-lg p-3 mt-2"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-3 mt-2"
           >
             {isSubmitting ? "Signing up..." : "Sign Up"}
           </button>
