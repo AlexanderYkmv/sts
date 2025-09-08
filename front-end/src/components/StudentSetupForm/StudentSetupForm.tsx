@@ -21,7 +21,7 @@ export default function StudentSetupForm({ onComplete }: Props) {
         body: JSON.stringify({
           facultyNumber,
           major,
-          tutorId: null, // always include
+          tutorId: null, 
         }),
       });
 

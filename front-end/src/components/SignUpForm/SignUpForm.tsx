@@ -1,11 +1,23 @@
-import { ErrorMessage, Field, Form, Formik } from "formik";
+import { ErrorMessage, Field, Form, Formik, type FormikHelpers } from "formik";
+import React from "react";
 import * as Yup from "yup";
 
 interface SignUpFormProps {
   onSuccess: () => void;
 }
 
-// Validation schema
+type Role = "Student" | "Tutor" | "Vice_Dean";
+
+interface SignUpValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: Role;
+  accessCode: string;
+}
+
 const SignUpSchema = Yup.object().shape({
   firstName: Yup.string().required("Required"),
   lastName: Yup.string().required("Required"),
@@ -17,21 +29,29 @@ const SignUpSchema = Yup.object().shape({
   role: Yup.string()
     .oneOf(["Student", "Tutor", "Vice_Dean"])
     .required("Required"),
+  accessCode: Yup.string().when("role", {
+    is: (role: any) => role === "Tutor" || role === "Vice_Dean",
+    then: (schema: any) => schema.required("Access code is required"),
+    otherwise: (schema: any) => schema.notRequired(),
+  }),
 });
 
 export default function SignUpForm({ onSuccess }: SignUpFormProps) {
+  const initialValues: SignUpValues = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "Student",
+    accessCode: "",
+  };
+
   return (
-    <Formik
-      initialValues={{
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        role: "Student",
-      }}
+    <Formik<SignUpValues>
+      initialValues={initialValues}
       validationSchema={SignUpSchema}
-      onSubmit={async (values, { setSubmitting }) => {
+      onSubmit={async (values: SignUpValues, { setSubmitting }: FormikHelpers<SignUpValues>) => {
         try {
           const response = await fetch("http://localhost:8080/sts/auth/register", {
             method: "POST",
@@ -42,6 +62,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
               email: values.email,
               password: values.password,
               role: values.role,
+              accessCode: values.role === "Student" ? undefined : values.accessCode,
             }),
             credentials: "include",
           });
@@ -61,7 +82,7 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
         }
       }}
     >
-      {({ isSubmitting }) => (
+      {({ values, isSubmitting, setFieldValue }) => (
         <Form className="flex flex-col gap-4">
           <div>
             <Field
@@ -117,6 +138,11 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
             <Field
               as="select"
               name="role"
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                const newRole = e.target.value as Role;
+                setFieldValue("role", newRole);
+                if (newRole === "Student") setFieldValue("accessCode", "");
+              }}
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
             >
               <option value="Student">Student</option>
@@ -125,6 +151,18 @@ export default function SignUpForm({ onSuccess }: SignUpFormProps) {
             </Field>
             <ErrorMessage name="role" component="div" className="text-red-500 text-sm mt-1" />
           </div>
+
+          {(values.role === "Tutor" || values.role === "Vice_Dean") && (
+            <div>
+              <Field
+                type="text"
+                name="accessCode"
+                placeholder="Access code (provided by the uni)"
+                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              />
+              <ErrorMessage name="accessCode" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+          )}
 
           <button
             type="submit"

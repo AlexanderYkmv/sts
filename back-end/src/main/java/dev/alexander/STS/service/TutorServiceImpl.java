@@ -9,6 +9,8 @@ import dev.alexander.STS.entity.Tutor;
 import dev.alexander.STS.entity.User;
 import dev.alexander.STS.repos.ResearchTopicRepository;
 import dev.alexander.STS.repos.TutorRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +20,9 @@ public class TutorServiceImpl implements TutorService {
     private final TutorRepository tutorRepository;
     private final ResearchTopicRepository researchTopicRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager; 
+
     @Override
     public List<ResearchTopic> getResearchTopicsForTutor(int tutorId) {
         return researchTopicRepository.findByTutorId(tutorId);
@@ -25,12 +30,15 @@ public class TutorServiceImpl implements TutorService {
 
     @Override
     public boolean existsByUser(User user) {
-    return tutorRepository.existsByUser(user);
-}
+        return tutorRepository.existsByUser(user);
+    }
 
     @Override
     @Transactional
     public Tutor saveTutor(Tutor tutor) {
+        if (tutor.getUser() != null) {
+            tutor.setUser(entityManager.merge(tutor.getUser()));
+        }
         return tutorRepository.save(tutor);
     }
 

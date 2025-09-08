@@ -30,7 +30,7 @@ public class Tutor {
     private String title;
 
     @Column(name="office_number")
-    private int officeNumber;
+    private Integer officeNumber;
 
     @Column(name="department")
     private String department;

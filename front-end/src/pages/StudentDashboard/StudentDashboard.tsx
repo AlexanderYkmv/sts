@@ -32,9 +32,8 @@ export default function StudentDashboard() {
     }
   };
 
-  // ✅ Fetch fresh thesis after upload
   const handleUploadSuccess = async (thesis: any) => {
-    if (!profile || profile === "loading") return; // ✅ narrow type
+    if (!profile || profile === "loading") return; 
     try {
       const res = await fetch(
         `http://localhost:8080/sts/thesis/student/${profile.studentId}`,

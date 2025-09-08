@@ -34,7 +34,6 @@ export default function ThesisUploadForm({ studentId, onUploadSuccess }: Props) 
         return alert(msg || "Upload failed");
       }
 
-      // Fetch the newly uploaded thesis
       const thesisRes = await fetch(
         `http://localhost:8080/sts/thesis/student/${studentId}`,
         { credentials: "include", cache: "no-store" }

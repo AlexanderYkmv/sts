@@ -17,7 +17,6 @@ export default function ThesisStatus({ studentId, initialThesis }: Props) {
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(!initialThesis);
 
-  // ✅ Keep thesis in sync when parent passes a new one
   useEffect(() => {
     if (initialThesis) {
       setThesis(initialThesis);
@@ -25,9 +24,8 @@ export default function ThesisStatus({ studentId, initialThesis }: Props) {
     }
   }, [initialThesis]);
 
-  // ✅ Fetch thesis + feedback if no initialThesis is given
   useEffect(() => {
-    if (initialThesis) return; // skip fetching if already provided
+    if (initialThesis) return;
 
     const fetchThesisAndFeedback = async () => {
       setLoading(true);

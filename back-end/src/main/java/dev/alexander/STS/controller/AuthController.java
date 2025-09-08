@@ -91,6 +91,21 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
+        }
+
+        User user = (User) auth.getPrincipal(); // assuming your User implements UserDetails
+        Map<String, Object> res = new HashMap<>();
+        res.put("userId", user.getId());
+        res.put("email", user.getEmail());
+        res.put("role", user.getRole());
+        return ResponseEntity.ok(res);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body,
                                    HttpServletRequest request) {

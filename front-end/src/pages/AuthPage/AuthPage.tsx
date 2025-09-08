@@ -8,7 +8,6 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
 
   const handleLoginSuccess = (user: User) => {
-    // Redirect based on role
     if (user.role === "Student") window.location.href = "/student/dashboard";
     else if (user.role === "Tutor") window.location.href = "/tutor/dashboard";
     else if (user.role === "Vice_Dean") window.location.href = "/vicedean/dashboard";

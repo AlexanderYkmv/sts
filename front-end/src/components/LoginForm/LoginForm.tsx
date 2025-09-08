@@ -35,10 +35,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
               studentId: data.studentId,
             };
 
-            // Store user in localStorage
             localStorage.setItem("user", JSON.stringify(user));
 
-            // Pass user to parent (AuthPage) for redirection
             onSuccess(user);
           } else {
             const msg = await response.text();
