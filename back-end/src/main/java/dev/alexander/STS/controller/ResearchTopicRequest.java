@@ -6,4 +6,5 @@ import lombok.Data;
 public class ResearchTopicRequest {
     private String name;
     private String topic;
+    private Integer capacity;
 }

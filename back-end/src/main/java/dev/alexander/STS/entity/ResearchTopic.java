@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Data
@@ -23,19 +24,23 @@ public class ResearchTopic {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(name = "name") 
+    @Column(name = "name")
     private String name;
 
     @ManyToOne
     @JoinColumn(name = "tutor_id", nullable = false)
+    @JsonBackReference
     private Tutor tutor;
 
     @Column(name = "topic", nullable = false)
     private String topic;
 
+    @Column(name = "capacity", nullable = false)
+    private Integer capacity = 1;
+
     public ResearchTopic(String name, Tutor tutor) {
         this.name = name;
         this.tutor = tutor;
     }
-     
+
 }

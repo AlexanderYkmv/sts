@@ -14,25 +14,26 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="tutor_profile")
+@Table(name = "tutor_profile")
 public class Tutor {
-    
-    @Id  
-    @Column(name="id")
+
+    @Id
+    @Column(name = "id")
     private int id;
 
-    @Column(name="title")
+    @Column(name = "title")
     private String title;
 
-    @Column(name="office_number")
+    @Column(name = "office_number")
     private Integer officeNumber;
 
-    @Column(name="department")
+    @Column(name = "department")
     private String department;
 
     @OneToOne
@@ -41,8 +42,9 @@ public class Tutor {
     private User user;
 
     @OneToMany(mappedBy = "tutor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<ResearchTopic> researchTopics = new ArrayList<>();
-    
+
 
     @OneToMany(mappedBy = "tutor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Student> allStudents = new ArrayList<>();
@@ -50,5 +52,5 @@ public class Tutor {
     public void addResearchTopic(ResearchTopic topic) {
         researchTopics.add(topic);
         topic.setTutor(this);
-        }
+    }
 }

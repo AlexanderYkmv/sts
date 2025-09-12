@@ -98,7 +98,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
         }
 
-        User user = (User) auth.getPrincipal(); // assuming your User implements UserDetails
+        User user = (User) auth.getPrincipal(); 
         Map<String, Object> res = new HashMap<>();
         res.put("userId", user.getId());
         res.put("email", user.getEmail());

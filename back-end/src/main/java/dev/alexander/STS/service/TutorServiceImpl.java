@@ -21,7 +21,7 @@ public class TutorServiceImpl implements TutorService {
     private final ResearchTopicRepository researchTopicRepository;
 
     @PersistenceContext
-    private EntityManager entityManager; 
+    private EntityManager entityManager;
 
     @Override
     public List<ResearchTopic> getResearchTopicsForTutor(int tutorId) {
@@ -36,9 +36,16 @@ public class TutorServiceImpl implements TutorService {
     @Override
     @Transactional
     public Tutor saveTutor(Tutor tutor) {
-        if (tutor.getUser() != null) {
-            tutor.setUser(entityManager.merge(tutor.getUser()));
+
+        if (tutor.getId() == 0 && tutor.getUser() != null) {
+            tutor.setId(tutor.getUser().getId());
         }
+        if (tutor.getResearchTopics() != null) {
+            for (ResearchTopic topic : tutor.getResearchTopics()) {
+                topic.setTutor(tutor);
+            }
+        }
+
         return tutorRepository.save(tutor);
     }
 
