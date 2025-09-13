@@ -39,11 +39,33 @@ public class TutorController {
         private String role; // enum as string for frontend
     }
 
-    // Get topics for any tutor by ID
-    @GetMapping("/{id}/topics")
-    public ResponseEntity<List<ResearchTopic>> getTutorTopics(@PathVariable int id) {
-        List<ResearchTopic> topics = tutorService.getResearchTopicsForTutor(id);
-        return ResponseEntity.ok(topics);
+    @Data
+    @AllArgsConstructor
+    static class ResearchTopicDTO {
+        private Integer id;
+        private String name;
+        private String topic;
+        private Integer capacity;
+        private Integer assignedStudentsCount;
+
+        public ResearchTopicDTO(ResearchTopic rt) {
+            this.id = rt.getId();
+            this.name = rt.getName();
+            this.topic = rt.getTopic();
+            this.capacity = rt.getCapacity();
+            this.assignedStudentsCount =
+                    rt.getAssignedStudents() != null ? rt.getAssignedStudents().size() : 0;
+        }
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class TutorWithTopicsDTO {
+        private Integer tutorId;
+        private String title;
+        private String department;
+        private Integer officeNumber;
+        private List<ResearchTopicDTO> topics;
     }
 
     // Get logged-in tutor profile
@@ -58,13 +80,16 @@ public class TutorController {
 
             return ResponseEntity
                     .ok(new TutorProfileDTO(tutor.getId(), tutor.getTitle(), tutor.getDepartment(),
-                            tutor.getOfficeNumber(), profileComplete, user.getRole().name() // send
-                                                                                            // role
-                                                                                            // as
-                                                                                            // string
-            ));
+                            tutor.getOfficeNumber(), profileComplete, user.getRole().name()));
         }).orElseGet(() -> ResponseEntity
                 .ok(new TutorProfileDTO(null, null, null, null, false, user.getRole().name())));
+    }
+
+    // Get topics for any tutor by ID
+    @GetMapping("/{id}/topics")
+    public ResponseEntity<List<ResearchTopic>> getTutorTopics(@PathVariable int id) {
+        List<ResearchTopic> topics = tutorService.getResearchTopicsForTutor(id);
+        return ResponseEntity.ok(topics);
     }
 
     // Get topics of logged-in tutor
@@ -116,8 +141,21 @@ public class TutorController {
         }
 
         tutorService.saveTutor(tutor);
-
         return ResponseEntity.ok("Tutor profile saved successfully.");
+    }
+
+    // Get all tutors with topics (with assigned student count)
+    @GetMapping("/all")
+    public ResponseEntity<List<TutorWithTopicsDTO>> getAllTutors() {
+        List<Tutor> tutors = tutorService.getAllTutors();
+        List<TutorWithTopicsDTO> dto = tutors.stream().map(t -> {
+            List<ResearchTopicDTO> topics =
+                    t.getResearchTopics().stream().map(ResearchTopicDTO::new).toList();
+            return new TutorWithTopicsDTO(t.getId(), t.getTitle(), t.getDepartment(),
+                    t.getOfficeNumber(), topics);
+        }).toList();
+
+        return ResponseEntity.ok(dto);
     }
 
     // Update tutor research topics
@@ -131,7 +169,6 @@ public class TutorController {
         }
 
         User user = (User) auth.getPrincipal();
-
         Tutor tutor = tutorService.getTutorByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Tutor not found"));
 
@@ -148,7 +185,6 @@ public class TutorController {
         }
 
         tutorService.saveTutor(tutor);
-
         return ResponseEntity.ok("Research topics updated successfully.");
     }
 }

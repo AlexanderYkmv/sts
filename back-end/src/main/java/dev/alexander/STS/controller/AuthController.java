@@ -39,7 +39,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request,
-                                      HttpServletRequest servletRequest) {
+            HttpServletRequest servletRequest) {
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest().body("Email already exists.");
         }
@@ -64,21 +64,22 @@ public class AuthController {
                 tutorRepository.save(t);
             }
             case Vice_Dean -> {
-                
+
             }
         }
-        
+
         try {
-            Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword())
-            );
+            Authentication auth =
+                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                            user.getEmail(), request.getPassword()));
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
 
             HttpSession session = servletRequest.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context);
 
             Map<String, Object> response = new HashMap<>();
             response.put("userId", user.getId());
@@ -87,18 +88,20 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Registration succeeded, login failed.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Registration succeeded, login failed.");
         }
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+        if (auth == null || !auth.isAuthenticated()
+                || auth.getPrincipal().equals("anonymousUser")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not logged in");
         }
 
-        User user = (User) auth.getPrincipal(); 
+        User user = (User) auth.getPrincipal();
         Map<String, Object> res = new HashMap<>();
         res.put("userId", user.getId());
         res.put("email", user.getEmail());
@@ -108,21 +111,21 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body,
-                                   HttpServletRequest request) {
+            HttpServletRequest request) {
         String email = body.get("email");
         String password = body.get("password");
 
         try {
-            Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-            );
+            Authentication auth = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(email, password));
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
 
             HttpSession session = request.getSession(true);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                    context);
 
             User loggedInUser = (User) auth.getPrincipal();
 

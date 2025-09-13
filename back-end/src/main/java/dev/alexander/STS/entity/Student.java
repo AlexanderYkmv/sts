@@ -19,9 +19,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Table(name = "student_profile")
 public class Student {
-      
-    @Id  
-    @Column(name="id")
+
+    @Id
+    @Column(name = "id")
     private int id;
 
     @OneToOne
@@ -29,10 +29,10 @@ public class Student {
     @JoinColumn(name = "id")
     private User user;
 
-    @Column(name="faculty_number")
+    @Column(name = "faculty_number")
     private String facultyNumber;
 
-    @Column(name="major")
+    @Column(name = "major")
     private String major;
 
     @ManyToOne
@@ -41,5 +41,9 @@ public class Student {
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private Thesis thesis;
-    
+
+    @ManyToOne
+    @JoinColumn(name = "research_topic_id")
+    private ResearchTopic researchTopic;
+
 }

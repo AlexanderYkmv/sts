@@ -8,7 +8,12 @@ import dev.alexander.STS.entity.User;
 
 public interface TutorService {
     Tutor saveTutor(Tutor tutor);
+
     Optional<Tutor> getTutorByUserId(int userId);
+
     List<ResearchTopic> getResearchTopicsForTutor(int tutorId);
+
+    List<Tutor> getAllTutors();
+
     boolean existsByUser(User user);
 }

@@ -53,4 +53,9 @@ public class TutorServiceImpl implements TutorService {
     public Optional<Tutor> getTutorByUserId(int userId) {
         return tutorRepository.findByUserId(userId);
     }
+
+    @Override
+    public List<Tutor> getAllTutors() {
+        return tutorRepository.findAll();
+    }
 }
