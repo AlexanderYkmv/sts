@@ -42,6 +42,7 @@ public class Student {
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private Thesis thesis;
 
+
     @ManyToOne
     @JoinColumn(name = "research_topic_id")
     private ResearchTopic researchTopic;

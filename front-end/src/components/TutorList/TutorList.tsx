@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import type { ResearchTopic } from "../ResearchTopics/ResearchTopics";
+
+export interface ResearchTopic {
+    id: number;
+    name: string;
+    topic: string;
+    capacity: number;
+    assignedStudentsCount?: number;
+}
 
 export interface TutorWithTopics {
     tutorId: number;
@@ -15,23 +22,68 @@ interface Props {
 
 export default function TutorList({ studentId }: Props) {
     const [tutors, setTutors] = useState<TutorWithTopics[] | "loading">("loading");
+    const [joinedTopicId, setJoinedTopicId] = useState<number | null>(null); // track joined topic
 
-    const fetchTutors = async () => {
+    const fetchTutorsAndStudent = async () => {
         setTutors("loading");
         try {
-            const res = await fetch("http://localhost:8080/sts/tutor/all", { credentials: "include" });
-            if (!res.ok) throw new Error("Failed to fetch tutors");
+            // Fetch tutors
+            const tutorsRes = await fetch("http://localhost:8080/sts/tutor/all", { credentials: "include" });
+            if (!tutorsRes.ok) throw new Error("Failed to fetch tutors");
+            const tutorsData: TutorWithTopics[] = await tutorsRes.json();
 
-            const data: TutorWithTopics[] = await res.json();
-            setTutors(data);
+            // Fetch current student info
+            const studentRes = await fetch("http://localhost:8080/sts/student/me", { credentials: "include" });
+            if (!studentRes.ok) throw new Error("Failed to fetch student");
+            const studentData = await studentRes.json();
+
+            setTutors(tutorsData);
+            if (studentData.researchTopicId) {
+                setJoinedTopicId(studentData.researchTopicId);
+            }
         } catch (err) {
             console.error(err);
             setTutors([]);
         }
     };
 
+    const handleJoin = async (topicId: number) => {
+        try {
+            const res = await fetch(`http://localhost:8080/sts/student/enroll/${topicId}`, {
+                method: "POST",
+                credentials: "include",
+            });
+
+            if (!res.ok) {
+                const errMsg = await res.text();
+                alert(errMsg);
+                return;
+            }
+
+            await res.json();
+
+            // Update local state immediately
+            setTutors((prev) => {
+                if (prev === "loading") return prev;
+                return prev.map((tutor) => ({
+                    ...tutor,
+                    topics: tutor.topics.map((topic) =>
+                        topic.id === topicId
+                            ? { ...topic, assignedStudentsCount: (topic.assignedStudentsCount ?? 0) + 1 }
+                            : topic
+                    ),
+                }));
+            });
+
+            setJoinedTopicId(topicId);
+        } catch (err) {
+            console.error(err);
+            alert("Could not join this topic.");
+        }
+    };
+
     useEffect(() => {
-        fetchTutors();
+        fetchTutorsAndStudent();
     }, []);
 
     if (tutors === "loading") return <p>Loading tutors...</p>;
@@ -48,26 +100,42 @@ export default function TutorList({ studentId }: Props) {
                     <h3 className="mt-2 font-semibold">Research Topics</h3>
                     <div className="grid sm:grid-cols-2 gap-4 mt-2">
                         {tutor.topics.map((topic) => {
-                            const full = topic.assignedStudentsCount && topic.assignedStudentsCount >= topic.capacity;
+                            const full =
+                                topic.assignedStudentsCount !== undefined &&
+                                topic.assignedStudentsCount >= topic.capacity;
+
+                            const joined = joinedTopicId === topic.id;
+
                             return (
                                 <div
                                     key={topic.id}
-                                    className={`border rounded-lg p-3 shadow ${full ? "bg-gray-200 text-gray-500" : "bg-white"}`}
+                                    className={`border rounded-lg p-3 shadow ${joined
+                                        ? "bg-green-400" // background green, keep text colors normal
+                                        : full
+                                            ? "bg-gray-200 text-gray-500"
+                                            : "bg-white"
+                                        } transition-colors duration-300`}
                                 >
                                     <h4 className="font-semibold">{topic.name}</h4>
                                     <p className="text-sm">{topic.topic}</p>
                                     <p className="text-sm">
                                         Capacity: {topic.capacity} | Assigned: {topic.assignedStudentsCount ?? 0}
                                     </p>
-                                    {!full && (
+
+                                    {!full && !joined && (
                                         <button
                                             className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                                            onClick={() => alert(`You can join this topic: ${topic.name}`)}
+                                            onClick={() => handleJoin(topic.id)}
                                         >
                                             Join
                                         </button>
                                     )}
-                                    {full && (
+
+                                    {joined && (
+                                        <p className="mt-2 font-semibold text-center">Joined</p>
+                                    )}
+
+                                    {full && !joined && (
                                         <p className="mt-2 text-red-500 text-sm font-semibold">Full</p>
                                     )}
                                 </div>

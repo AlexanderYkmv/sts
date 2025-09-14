@@ -1,33 +1,23 @@
 package dev.alexander.STS.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import java.util.List;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name="thesis")
+@Table(name = "thesis")
 @Data
 public class Thesis {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
+    @Column(name = "id")
     private int id;
-    
-    @Column(name="title")
+
+    @Column(name = "title")
     private String title;
-    
-    @Column(name="major")
+
+    @Column(name = "major")
     private String major;
 
     @Column(name = "file_name")
@@ -49,9 +39,11 @@ public class Thesis {
     @Column(name = "status")
     private ThesisStatus status;
 
+
+    @OneToMany(mappedBy = "thesis", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Feedback> feedbacks;
+
     public enum ThesisStatus {
-        PENDING,
-        APPROVED,
-        REJECTED
+        PENDING, APPROVED, REJECTED
     }
 }

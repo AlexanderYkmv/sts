@@ -45,6 +45,7 @@ public class ResearchTopic {
     @OneToMany(mappedBy = "researchTopic", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Student> assignedStudents = new ArrayList<>();
 
+
     public ResearchTopic(String name, Tutor tutor) {
         this.name = name;
         this.tutor = tutor;
