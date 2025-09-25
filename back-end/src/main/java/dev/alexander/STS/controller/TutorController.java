@@ -1,8 +1,11 @@
 package dev.alexander.STS.controller;
 
 import java.util.List;
-import lombok.Data;
+import java.util.stream.Collectors;
+
 import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -14,11 +17,10 @@ import org.springframework.web.bind.annotation.*;
 import dev.alexander.STS.entity.ResearchTopic;
 import dev.alexander.STS.entity.Tutor;
 import dev.alexander.STS.entity.User;
+import dev.alexander.STS.entity.Thesis;
 import dev.alexander.STS.security.AccessCodes;
 import dev.alexander.STS.service.TutorService;
 import dev.alexander.STS.service.UserService;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/sts/tutor")
@@ -36,7 +38,7 @@ public class TutorController {
         private String department;
         private Integer officeNumber;
         private boolean profileComplete;
-        private String role; // enum as string for frontend
+        private String role;
     }
 
     @Data
@@ -68,6 +70,17 @@ public class TutorController {
         private List<ResearchTopicDTO> topics;
     }
 
+    @Data
+    @AllArgsConstructor
+    static class StudentThesisDTO {
+        private int studentId;
+        private String name;
+        private String facultyNumber;
+        private String thesisTitle;
+        private String feedback;
+        private Integer thesisId;
+    }
+
     // Get logged-in tutor profile
     @GetMapping("/me")
     public ResponseEntity<TutorProfileDTO> getTutorProfile(Authentication auth) {
@@ -85,23 +98,25 @@ public class TutorController {
                 .ok(new TutorProfileDTO(null, null, null, null, false, user.getRole().name())));
     }
 
-    // Get topics for any tutor by ID
     @GetMapping("/{id}/topics")
-    public ResponseEntity<List<ResearchTopic>> getTutorTopics(@PathVariable int id) {
+    public ResponseEntity<List<ResearchTopicDTO>> getTutorTopics(@PathVariable int id) {
         List<ResearchTopic> topics = tutorService.getResearchTopicsForTutor(id);
-        return ResponseEntity.ok(topics);
+        List<ResearchTopicDTO> dto = topics.stream().map(ResearchTopicDTO::new).toList();
+        return ResponseEntity.ok(dto);
     }
 
-    // Get topics of logged-in tutor
     @GetMapping("/topics")
-    public ResponseEntity<List<ResearchTopic>> getMyTopics(Authentication auth) {
+    public ResponseEntity<List<ResearchTopicDTO>> getMyTopics(Authentication auth) {
         User user = (User) auth.getPrincipal();
         Tutor tutor = tutorService.getTutorByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Tutor not found"));
-        return ResponseEntity.ok(tutor.getResearchTopics());
+
+        List<ResearchTopicDTO> dto =
+                tutor.getResearchTopics().stream().map(ResearchTopicDTO::new).toList();
+
+        return ResponseEntity.ok(dto);
     }
 
-    // Setup tutor profile
     @PostMapping("/setup")
     @Transactional
     public ResponseEntity<?> setupTutor(@RequestBody TutorRegisterRequest request) {
@@ -144,7 +159,6 @@ public class TutorController {
         return ResponseEntity.ok("Tutor profile saved successfully.");
     }
 
-    // Get all tutors with topics (with assigned student count)
     @GetMapping("/all")
     public ResponseEntity<List<TutorWithTopicsDTO>> getAllTutors() {
         List<Tutor> tutors = tutorService.getAllTutors();
@@ -158,7 +172,25 @@ public class TutorController {
         return ResponseEntity.ok(dto);
     }
 
-    // Update tutor research topics
+    @GetMapping("/students")
+    public ResponseEntity<List<StudentThesisDTO>> getAssignedStudents(Authentication auth) {
+        User tutorUser = (User) auth.getPrincipal();
+        Tutor tutor = tutorService.getTutorByUserId(tutorUser.getId())
+                .orElseThrow(() -> new RuntimeException("Tutor not found"));
+
+        List<StudentThesisDTO> students = tutor.getResearchTopics().stream()
+                .flatMap(topic -> topic.getAssignedStudents().stream()).map(student -> {
+                    Thesis thesis = student.getThesis();
+                    String name = student.getUser().getFirstName() + " "
+                            + student.getUser().getLastName();
+                    return new StudentThesisDTO(student.getId(), name, student.getFacultyNumber(),
+                            thesis != null ? thesis.getTitle() : null, null,
+                            thesis != null ? thesis.getId() : null);
+                }).distinct().collect(Collectors.toList());
+
+        return ResponseEntity.ok(students);
+    }
+
     @PostMapping("/topics")
     @Transactional
     public ResponseEntity<?> updateTopics(@RequestBody List<ResearchTopicRequest> topicsRequest) {

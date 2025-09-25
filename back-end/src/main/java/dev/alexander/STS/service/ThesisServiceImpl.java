@@ -13,6 +13,7 @@ public class ThesisServiceImpl implements ThesisService {
 
     private final ThesisRepository thesisRepository;
 
+    // student submits a NEW thesis
     @Override
     public Thesis saveThesis(Thesis thesis) {
         thesis.setStatus(Thesis.ThesisStatus.PENDING);
@@ -20,20 +21,32 @@ public class ThesisServiceImpl implements ThesisService {
         return thesisRepository.save(thesis);
     }
 
+    // student updates an existing thesis submission
     @Override
     public Thesis updateThesis(Thesis thesis) {
-    Optional<Thesis> existingOpt = thesisRepository.findByStudentId(thesis.getStudent().getId());
-    if (existingOpt.isEmpty()) {
-        throw new IllegalStateException("No existing thesis found to update.");
+        Optional<Thesis> existingOpt =
+                thesisRepository.findByStudentId(thesis.getStudent().getId());
+        if (existingOpt.isEmpty()) {
+            throw new IllegalStateException("No existing thesis found to update.");
+        }
+        Thesis existing = existingOpt.get();
+        existing.setTitle(thesis.getTitle());
+        existing.setFileName(thesis.getFileName());
+        existing.setFileData(thesis.getFileData());
+
+        existing.setStatus(Thesis.ThesisStatus.PENDING);
+        existing.setApprovedBy(null);
+
+        return thesisRepository.save(existing);
     }
-    Thesis existing = existingOpt.get();
-    existing.setTitle(thesis.getTitle());
-    existing.setFileName(thesis.getFileName());
-    existing.setFileData(thesis.getFileData());
-    existing.setStatus(Thesis.ThesisStatus.PENDING); 
-    existing.setApprovedBy(null);
-    return thesisRepository.save(existing);
-}
+
+    // vice dean review thesis
+    public Thesis reviewThesis(Thesis thesis, Thesis.ThesisStatus status,
+            dev.alexander.STS.entity.User viceDean) {
+        thesis.setStatus(status);
+        thesis.setApprovedBy(viceDean);
+        return thesisRepository.save(thesis);
+    }
 
     @Override
     public Optional<Thesis> getThesisById(int id) {

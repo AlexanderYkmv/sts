@@ -27,7 +27,6 @@ public class StudentController {
     private final StudentRepository studentRepository;
     private final ResearchTopicRepository researchTopicRepository;
 
-    // ---------------- Student Setup ----------------
     @PostMapping("/setup")
     @Transactional
     public ResponseEntity<?> setupStudent(@RequestBody StudentRegisterRequest request,
@@ -59,7 +58,6 @@ public class StudentController {
         return ResponseEntity.ok("Student profile saved.");
     }
 
-    // ---------------- Enroll in Research Topic ----------------
     @PostMapping("/enroll/{topicId}")
     @Transactional
     public ResponseEntity<?> enrollInTopic(@PathVariable int topicId, Principal principal) {
@@ -88,7 +86,6 @@ public class StudentController {
             return ResponseEntity.badRequest().body("Topic is full");
         }
 
-        // Enroll student
         student.setResearchTopic(topic);
         student.setTutor(topic.getTutor());
         studentRepository.save(student);
@@ -98,7 +95,6 @@ public class StudentController {
                 topic.getTutor() != null ? topic.getTutor().getId() : null));
     }
 
-    // ---------------- Get Current Student Profile ----------------
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentStudent(Principal principal) {
         if (principal == null)

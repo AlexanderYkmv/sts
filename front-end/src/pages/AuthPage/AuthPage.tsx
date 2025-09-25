@@ -10,7 +10,7 @@ export default function AuthPage() {
   const handleLoginSuccess = (user: User) => {
     if (user.role === "Student") window.location.href = "/student/dashboard";
     else if (user.role === "Tutor") window.location.href = "/tutor/dashboard";
-    else if (user.role === "Vice_Dean") window.location.href = "/vicedean/dashboard";
+    else if (user.role === "Vice_Dean") window.location.href = "/vice-dean/dashboard";
     else window.location.href = "/";
   };
 

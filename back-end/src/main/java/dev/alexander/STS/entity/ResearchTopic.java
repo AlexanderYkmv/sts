@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Data
@@ -43,6 +44,7 @@ public class ResearchTopic {
     private Integer capacity = 1;
 
     @OneToMany(mappedBy = "researchTopic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Student> assignedStudents = new ArrayList<>();
 
 
