@@ -13,6 +13,8 @@ export interface TutorWithTopics {
     title: string | null;
     department: string | null;
     officeNumber: number | null;
+    firstName: string | null;
+    lastName: string | null;
     topics: ResearchTopic[];
 }
 
@@ -22,18 +24,19 @@ interface Props {
 
 export default function TutorList({ studentId }: Props) {
     const [tutors, setTutors] = useState<TutorWithTopics[] | "loading">("loading");
-    const [joinedTopicId, setJoinedTopicId] = useState<number | null>(null); // track joined topic
-
+    const [joinedTopicId, setJoinedTopicId] = useState<number | null>(null);
     const fetchTutorsAndStudent = async () => {
         setTutors("loading");
         try {
-            // Fetch tutors
-            const tutorsRes = await fetch("http://localhost:8080/sts/tutor/all", { credentials: "include" });
+            const tutorsRes = await fetch("http://localhost:8080/sts/tutor/all", {
+                credentials: "include",
+            });
             if (!tutorsRes.ok) throw new Error("Failed to fetch tutors");
             const tutorsData: TutorWithTopics[] = await tutorsRes.json();
 
-            // Fetch current student info
-            const studentRes = await fetch("http://localhost:8080/sts/student/me", { credentials: "include" });
+            const studentRes = await fetch("http://localhost:8080/sts/student/me", {
+                credentials: "include",
+            });
             if (!studentRes.ok) throw new Error("Failed to fetch student");
             const studentData = await studentRes.json();
 
@@ -62,14 +65,16 @@ export default function TutorList({ studentId }: Props) {
 
             await res.json();
 
-            // Update local state immediately
             setTutors((prev) => {
                 if (prev === "loading") return prev;
                 return prev.map((tutor) => ({
                     ...tutor,
                     topics: tutor.topics.map((topic) =>
                         topic.id === topicId
-                            ? { ...topic, assignedStudentsCount: (topic.assignedStudentsCount ?? 0) + 1 }
+                            ? {
+                                ...topic,
+                                assignedStudentsCount: (topic.assignedStudentsCount ?? 0) + 1,
+                            }
                             : topic
                     ),
                 }));
@@ -93,9 +98,18 @@ export default function TutorList({ studentId }: Props) {
         <div className="space-y-6">
             {tutors.map((tutor) => (
                 <div key={tutor.tutorId} className="bg-white shadow rounded-lg p-4">
-                    <h2 className="text-lg font-bold">{tutor.title ?? "-"}</h2>
-                    <p><strong>Department:</strong> {tutor.department ?? "-"}</p>
-                    <p><strong>Office:</strong> {tutor.officeNumber ?? "-"}</p>
+                    <h2 className="text-lg font-bold">
+                        {tutor.firstName} {tutor.lastName}
+                    </h2>
+                    <p>
+                        <strong>Title:</strong> {tutor.title ?? "-"}
+                    </p>
+                    <p>
+                        <strong>Department:</strong> {tutor.department ?? "-"}
+                    </p>
+                    <p>
+                        <strong>Office:</strong> {tutor.officeNumber ?? "-"}
+                    </p>
 
                     <h3 className="mt-2 font-semibold">Research Topics</h3>
                     <div className="grid sm:grid-cols-2 gap-4 mt-2">
@@ -110,7 +124,7 @@ export default function TutorList({ studentId }: Props) {
                                 <div
                                     key={topic.id}
                                     className={`border rounded-lg p-3 shadow ${joined
-                                        ? "bg-green-400" // background green, keep text colors normal
+                                        ? "bg-green-400"
                                         : full
                                             ? "bg-gray-200 text-gray-500"
                                             : "bg-white"
@@ -119,7 +133,8 @@ export default function TutorList({ studentId }: Props) {
                                     <h4 className="font-semibold">{topic.name}</h4>
                                     <p className="text-sm">{topic.topic}</p>
                                     <p className="text-sm">
-                                        Capacity: {topic.capacity} | Assigned: {topic.assignedStudentsCount ?? 0}
+                                        Capacity: {topic.capacity} | Assigned:{" "}
+                                        {topic.assignedStudentsCount ?? 0}
                                     </p>
 
                                     {!full && !joined && (
@@ -136,7 +151,9 @@ export default function TutorList({ studentId }: Props) {
                                     )}
 
                                     {full && !joined && (
-                                        <p className="mt-2 text-red-500 text-sm font-semibold">Full</p>
+                                        <p className="mt-2 text-red-500 text-sm font-semibold">
+                                            Full
+                                        </p>
                                     )}
                                 </div>
                             );

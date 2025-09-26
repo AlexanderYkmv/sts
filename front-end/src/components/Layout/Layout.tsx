@@ -37,12 +37,10 @@ export default function Layout() {
         </nav>
       </header>
 
-      {/* Routed content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="bg-gray-200 p-4 text-center text-gray-600 text-sm">
         © {new Date().getFullYear()} Technical University of Sofia
       </footer>

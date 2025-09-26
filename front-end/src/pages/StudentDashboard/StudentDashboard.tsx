@@ -32,10 +32,7 @@ export default function StudentDashboard() {
   const fetchProfile = async () => {
     setProfile("loading");
     try {
-      const res = await fetch("http://localhost:8080/sts/student/me", {
-        credentials: "include",
-        cache: "no-store",
-      });
+      const res = await fetch("http://localhost:8080/sts/student/me", { credentials: "include", cache: "no-store" });
       if (!res.ok) throw new Error("Failed to fetch student profile");
       const data: StudentProfile = await res.json();
       setProfile(data);
@@ -48,10 +45,10 @@ export default function StudentDashboard() {
   const handleUploadSuccess = async (thesis: any) => {
     if (!profile || profile === "loading") return;
     try {
-      const res = await fetch(
-        `http://localhost:8080/sts/thesis/student/${profile.studentId}`,
-        { credentials: "include", cache: "no-store" }
-      );
+      const res = await fetch(`http://localhost:8080/sts/thesis/student/${profile.studentId}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
       const latestThesis = res.ok ? await res.json() : thesis;
       setUploadedThesis(latestThesis);
     } catch (err) {
@@ -70,10 +67,10 @@ export default function StudentDashboard() {
       setTopicLoading(true);
       const fetchTopic = async () => {
         try {
-          const res = await fetch(
-            `http://localhost:8080/sts/research-topic/${profile.researchTopicId}`,
-            { credentials: "include", cache: "no-store" }
-          );
+          const res = await fetch(`http://localhost:8080/sts/research-topic/${profile.researchTopicId}`, {
+            credentials: "include",
+            cache: "no-store",
+          });
           if (!res.ok) throw new Error("Topic not found");
           const topicData: ResearchTopic = await res.json();
           setEnrolledTopic(topicData);
@@ -99,41 +96,73 @@ export default function StudentDashboard() {
   if (!profile.profileComplete) return <StudentSetupForm onComplete={fetchProfile} />;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col p-6">
       <header className="py-4">
         <h1 className="text-2xl font-bold text-center">Student Dashboard</h1>
       </header>
 
       {activeCard === "menu" && (
-        <main className="flex-1 flex flex-col justify-center items-center overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 justify-items-center w-full max-w-6xl p-4">
+        <main className="flex-1 flex flex-col items-center overflow-hidden">
+          <div className="mt-32 grid grid-cols-1 sm:grid-cols-3 gap-24 justify-items-center w-full max-w-7xl p-4">
+
+            {/* Submit Work Card */}
             <div
               onClick={() => setActiveCard("submitWork")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-80 h-64 p-6"
+              style={{
+                backgroundImage: "url('/submit-your-work.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">Submit Your Work</h2>
-              <p className="text-gray-600 text-sm">Upload your thesis and track its status.</p>
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2">Submit Your Work</h2>
+                <p className="text-gray-700 text-sm sm:text-base">Upload your thesis and track its status.</p>
+              </div>
             </div>
 
+            {/* Find Tutor Card */}
             <div
               onClick={() => setActiveCard("findTutor")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-80 h-64 p-6"
+              style={{
+                backgroundImage: "url('/find-a-tutor.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">Find a Tutor</h2>
-              <p className="text-gray-600 text-sm">Browse tutors and available research topics.</p>
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2">Find a Tutor</h2>
+                <p className="text-gray-700 text-sm sm:text-base">Browse tutors and available research topics.</p>
+              </div>
             </div>
 
+            {/* View Profile Card */}
             <div
               onClick={() => setActiveCard("viewProfile")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-80 h-64 p-6"
+              style={{
+                backgroundImage: "url('/view-profile.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">View Profile</h2>
-              <p className="text-gray-600 text-sm">See your student details, thesis, and feedback.</p>
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-xl sm:text-2xl font-semibold mb-2">View Profile</h2>
+                <p className="text-gray-700 text-sm sm:text-base">See your student details, thesis, and feedback.</p>
+              </div>
             </div>
           </div>
         </main>
       )}
 
+      {/* Submit Work */}
       {activeCard === "submitWork" && (
         <main className="flex-1 overflow-y-auto p-6">
           <button className="text-blue-600 underline mb-4" onClick={() => setActiveCard("menu")}>
@@ -144,6 +173,7 @@ export default function StudentDashboard() {
         </main>
       )}
 
+      {/* Find Tutor */}
       {activeCard === "findTutor" && (
         <main className="flex-1 overflow-y-auto p-6">
           <button className="text-blue-600 underline mb-4" onClick={() => setActiveCard("menu")}>
@@ -153,13 +183,14 @@ export default function StudentDashboard() {
         </main>
       )}
 
+      {/* View Profile */}
       {activeCard === "viewProfile" && (
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           <button className="text-blue-600 underline" onClick={() => setActiveCard("menu")}>
             ← Back to menu
           </button>
 
-          <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl mx-auto">
+          <div className="bg-white shadow-md rounded-xl p-6 w-full max-w-3xl mx-auto">
             <p><strong>Major:</strong> {profile.major}</p>
             <p><strong>Faculty Number:</strong> {profile.facultyNumber}</p>
           </div>
@@ -167,7 +198,7 @@ export default function StudentDashboard() {
           {topicLoading ? (
             <p className="text-center text-gray-500">Loading research topic...</p>
           ) : enrolledTopic ? (
-            <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl mx-auto">
+            <div className="bg-white shadow-md rounded-xl p-6 w-full max-w-3xl mx-auto">
               <h3 className="text-lg font-semibold mb-2">Enrolled Research Topic</h3>
               <p><strong>Name:</strong> {enrolledTopic.name}</p>
               <p><strong>Description:</strong> {enrolledTopic.topicDesc}</p>

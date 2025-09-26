@@ -13,7 +13,7 @@ public class ThesisServiceImpl implements ThesisService {
 
     private final ThesisRepository thesisRepository;
 
-    // student submits a NEW thesis
+    // student submits a new thesis
     @Override
     public Thesis saveThesis(Thesis thesis) {
         thesis.setStatus(Thesis.ThesisStatus.PENDING);

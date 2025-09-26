@@ -67,6 +67,8 @@ public class TutorController {
         private String title;
         private String department;
         private Integer officeNumber;
+        private String firstName;
+        private String lastName;
         private List<ResearchTopicDTO> topics;
     }
 
@@ -81,7 +83,6 @@ public class TutorController {
         private Integer thesisId;
     }
 
-    // Get logged-in tutor profile
     @GetMapping("/me")
     public ResponseEntity<TutorProfileDTO> getTutorProfile(Authentication auth) {
         User user = (User) auth.getPrincipal();
@@ -165,8 +166,10 @@ public class TutorController {
         List<TutorWithTopicsDTO> dto = tutors.stream().map(t -> {
             List<ResearchTopicDTO> topics =
                     t.getResearchTopics().stream().map(ResearchTopicDTO::new).toList();
+            User u = t.getUser();
             return new TutorWithTopicsDTO(t.getId(), t.getTitle(), t.getDepartment(),
-                    t.getOfficeNumber(), topics);
+                    t.getOfficeNumber(), u != null ? u.getFirstName() : null,
+                    u != null ? u.getLastName() : null, topics);
         }).toList();
 
         return ResponseEntity.ok(dto);

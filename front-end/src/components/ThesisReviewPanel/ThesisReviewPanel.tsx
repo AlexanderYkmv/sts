@@ -20,7 +20,6 @@ export default function ThesisReviewPanel({ thesis, viceDean, onClose, onReviewe
         setLoading(true);
         setError(null);
         try {
-            // 1️⃣ Submit thesis decision
             const res = await fetch("http://localhost:8080/sts/vice-dean/thesis/decision", {
                 method: "POST",
                 credentials: "include",
@@ -37,7 +36,6 @@ export default function ThesisReviewPanel({ thesis, viceDean, onClose, onReviewe
                 throw new Error(msg || "Failed to submit review");
             }
 
-            // 2️⃣ Submit feedback if exists
             if (feedback.trim()) {
                 const fbRes = await fetch("http://localhost:8080/sts/feedback", {
                     method: "POST",

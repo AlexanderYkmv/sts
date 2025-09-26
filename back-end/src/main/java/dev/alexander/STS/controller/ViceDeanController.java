@@ -42,7 +42,6 @@ public class ViceDeanController {
         return ResponseEntity.ok("Vice Dean profile setup complete");
     }
 
-    // get all theses as DTOs with student names
     @GetMapping("/theses")
     public ResponseEntity<List<ThesisDto>> getAllTheses() {
         List<Thesis> theses = thesisService.getAllTheses();

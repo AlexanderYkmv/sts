@@ -73,7 +73,7 @@ export default function ViceDeanDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-purple-700 text-center">🏛️ Vice Dean Dashboard</h1>
+      <h1 className="text-2xl font-bold text-black-700 text-center">Vice Dean Dashboard</h1>
 
       {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
 

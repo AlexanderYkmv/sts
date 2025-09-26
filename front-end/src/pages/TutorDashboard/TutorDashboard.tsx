@@ -115,30 +115,60 @@ export default function TutorDashboard() {
 
       {/* Menu */}
       {activeCard === "menu" && (
-        <main className="flex-1 flex flex-col justify-center items-center overflow-hidden">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 justify-items-center w-full max-w-6xl p-4">
+        <main className="flex-1 flex flex-col items-center overflow-hidden">
+          <div className="mt-32 grid grid-cols-1 sm:grid-cols-3 gap-24 justify-items-center w-full max-w-7xl p-4">
             <div
               onClick={() => setActiveCard("addTopic")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-[420px] h-64 p-6"
+              style={{
+                backgroundImage: "url('/research-topic-logo.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">Add Research Topic</h2>
-              <p className="text-gray-600 text-sm">Create and manage your research topics.</p>
+
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-3xl font-semibold mb-3">Add Research Topic</h2>
+                <p className="text-lg text-gray-700">Create and manage your research topics.</p>
+              </div>
             </div>
 
             <div
               onClick={() => setActiveCard("shareFeedback")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-[420px] h-64 p-6"
+              style={{
+                backgroundImage: "url('/feedback-logo.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">Share Feedback</h2>
-              <p className="text-gray-600 text-sm">Check student theses and provide feedback.</p>
+
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-3xl font-semibold mb-3">Share Feedback</h2>
+                <p className="text-lg text-gray-700">Check student theses and provide feedback.</p>
+              </div>
             </div>
 
             <div
               onClick={() => setActiveCard("manageWork")}
-              className="cursor-pointer bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-64 h-64 p-6"
+              className="cursor-pointer relative bg-white shadow-lg rounded-xl flex flex-col justify-center items-center text-center hover:shadow-2xl hover:-translate-y-1 transition w-[420px] h-64 p-6"
+              style={{
+                backgroundImage: "url('/manage-my-work.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
             >
-              <h2 className="text-xl font-semibold mb-3">Manage My Work</h2>
-              <p className="text-gray-600 text-sm">View your topics and assigned students.</p>
+
+              <div className="absolute inset-0 bg-white/60 rounded-xl"></div>
+              <div className="relative z-10">
+                <h2 className="text-3xl font-semibold mb-3">Manage My Work</h2>
+                <p className="text-lg text-gray-700">View your topics and assigned students.</p>
+              </div>
             </div>
           </div>
         </main>
@@ -219,9 +249,28 @@ export default function TutorDashboard() {
               <p><strong>Name:</strong> {s.name}</p>
               <p><strong>Faculty Number:</strong> {s.facultyNumber}</p>
               <p><strong>Thesis Title:</strong> {s.thesisTitle}</p>
-              {s.thesisFileUrl && (
-                <a href={s.thesisFileUrl} target="_blank" className="text-blue-600 underline">View Thesis</a>
+
+              {s.thesisId && (
+                <div className="space-y-2">
+                  <a
+                    href={`http://localhost:8080/sts/thesis/${s.thesisId}/file`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    View File
+                  </a>
+
+                  {s.thesisFileUrl?.toLowerCase().endsWith(".pdf") && (
+                    <iframe
+                      src={`http://localhost:8080/sts/thesis/${s.thesisId}/file`}
+                      className="w-full h-96 border rounded"
+                      title={`Thesis Preview - ${s.name}`}
+                    />
+                  )}
+                </div>
               )}
+
               <textarea
                 className="border w-full p-2 rounded mt-2"
                 placeholder="Leave feedback"

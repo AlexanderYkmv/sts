@@ -52,7 +52,7 @@ public class ThesisController {
         return ResponseEntity.ok("Thesis uploaded successfully.");
     }
 
-    // to preview thesis content
+    // preview thesis content
     @GetMapping("/{id}/file")
     public ResponseEntity<byte[]> getThesisFile(@PathVariable int id) {
         Optional<Thesis> thesisOpt = thesisService.getThesisById(id);
